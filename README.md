@@ -1,5 +1,7 @@
 # norse
 
+**Based on the original program by [t3ddezz](https://github.com/t3ddezz/norse), [replication](https://github.com/replikation) and DataSpott. Copied for maintenance**
+
 ##  **N**an**O**po**R**e **SE**quencing 
 GUI for nanopore data transfer to a server and sample informations. All informations are collected in a `run_info.txt` file that is stored with the uploaded data.
 
