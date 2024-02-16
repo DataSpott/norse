@@ -14,8 +14,8 @@ class Window2(QMainWindow):#class for window2 (pop up window)
         self.setWindowTitle("check your data")
         self.setGeometry(400, 400, 330, 385)
 
-        self.label_name_list = ["label" + str(item) for item in list(range(1, (24 + 1), 1))]
-        self.input_name_list = ["input" + str(item) for item in list(range(1, (24 + 1), 1))]
+        self.label_name_list = ["label" + str(item) for item in list(range(1, 25, 1))]
+        self.input_name_list = ["input" + str(item) for item in list(range(1, 25, 1))]
         self.iniUI()
         
         
@@ -83,10 +83,11 @@ class Window2(QMainWindow):#class for window2 (pop up window)
         self.button.clicked.connect(self.close)#close window2
 
 
-    def hide_and_show(self,first_label_index, last_label_index, BOOLEAN):   #hide or show labels
+    def hide_and_show(self, first_label_index, last_label_index, BOOLEAN):   #hide or show labels
         globs, locs = globals(), locals()
         #list comprehension build string (exec) using label_name an then execute the command
         [exec(f'self.{label_name}.setHidden({BOOLEAN})', globs,locs) for label_name in self.label_name_list[(first_label_index - 1):last_label_index]]
+        [exec(f'self.{input_name}.setHidden({BOOLEAN})', globs,locs) for input_name in self.input_name_list[(first_label_index - 1):last_label_index]]
         self.tableView.setHidden(True)
 
 
@@ -94,10 +95,10 @@ class Window2(QMainWindow):#class for window2 (pop up window)
         #file_1 = global variable with suffix from uploaded file
         #self.tableWidget.setItem(0,0, QtWidgets.QTableWidgetItem("barcode")
         column = 0
-        if self.file_1 == 'csv':
+        if self.FILE_1 == 'csv':
             self.tableView.setRowCount(0)
             self.tableView.setColumnCount(2)
-            my_file = pd.read_csv(self.upload_sample_path, sep=',',header=None)
+            my_file = pd.read_csv(self.UPLOAD_SAMPLE_INFO_PATH, sep=',',header=None)
             my_file_rows = len(my_file)
             my_file_columns = len(my_file.columns)
             self.tableView.setRowCount(my_file_rows)
@@ -111,10 +112,10 @@ class Window2(QMainWindow):#class for window2 (pop up window)
                 column = 0
             
         column = 0
-        if self.file_1 == 'xlsx':
+        if self.FILE_1 == 'xlsx':
             self.tableView.setRowCount(0)
             self.tableView.setColumnCount(2)
-            my_file = pd.read_excel(self.upload_sample_path, header=None)
+            my_file = pd.read_excel(self.UPLOAD_SAMPLE_INFO_PATH, header=None)
             my_file_rows = len(my_file)
             my_file_columns = len(my_file.columns)
             self.tableView.setRowCount(my_file_rows)

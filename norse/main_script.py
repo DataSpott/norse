@@ -15,7 +15,7 @@ import socket
 import time
 import os
 import argparse
-from .norse_module.MainWindow_libraries import MyWindow, version
+from .norse_module.MainWindow_libraries import MyWindow, VERSION
 
 program = "norse"
 
@@ -25,7 +25,7 @@ def main(sysargs = sys.argv[1:]):   #main function to run script and see version
     description='norse, nanopore sequencing data transfer',
     usage='''norse [options]''')
 
-    parser.add_argument("-v", "--version", action = 'version', version = f"norse = {version}")
+    parser.add_argument("-v", "--version", action = 'version', version = f"norse = {VERSION}")
     parser.add_argument("-r", "--run", action = 'store_true', help = f"run {program}")
         
     if len(sysargs)<1:  #if no arguments typed print help and exit
