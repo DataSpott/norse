@@ -17,13 +17,15 @@ RUN apt-get update && apt-get install -y python3-pyqt5 \
 					rsync \
 					ssh-askpass-gnome \
 					ssh-askpass \
-					sshpass
+					sshpass \
+					wget
 
-RUN pip3 install install pandas requests paramiko openpyxl xlrd  argparse
+RUN pip3 install pandas requests paramiko openpyxl xlrd  argparse
 
-RUN mkdir -p norse
+RUN mkdir -p norse download
+RUN chmod 777 /download
 COPY . norse/
-RUN cd norse && python3 setup.py install
+RUN cd norse && chmod -R 777 data && python3 setup.py install
 
 RUN mkdir -p /tmp/runtime-qtuser && chmod 777 /tmp/runtime-qtuser && chown qtuser /tmp/runtime-qtuser
 ENV XDG_RUNTIME_DIR='/tmp/runtime-qtuser'

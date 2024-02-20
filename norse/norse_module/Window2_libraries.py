@@ -5,137 +5,130 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QInputDialog,  QFileDialo
 from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap
 from PyQt5.QtCore import Qt, QFileInfo
 import pandas as pd
-#from libraries.MainWindow_libraries import file_1, upload_sample_path
 
-class Window2(QMainWindow):#class for window2 (pop up window)
+class Window2(QMainWindow): #class for window2 (pop up window)
     
     def __init__(self):
         super(Window2,self).__init__()
+        #set up window title and geometry
         self.setWindowTitle("check your data")
         self.setGeometry(400, 400, 330, 385)
 
-        self.label_name_list = ["label" + str(item) for item in list(range(1, 25, 1))]
-        self.input_name_list = ["input" + str(item) for item in list(range(1, 25, 1))]
+        #set up two lists containing "LABEL1" to "LABEL24" or "INPUT1" to "INPUT24"
+        self.LABEL_NAME_LIST = ["LABEL" + str(ITEM) for ITEM in list(range(1, 25, 1))]
+        self.INPUT_NAME_LIST = ["INPUT" + str(ITEM) for ITEM in list(range(1, 25, 1))]
         self.iniUI()
-        
-        
-    def iniUI(self):
-        globs, locs = globals(), locals()
-        [exec(f"self.{label_name} = QtWidgets.QLabel(self)",globs, locs) for label_name in self.label_name_list]
-        [exec(f"self.{input_name} = QtWidgets.QLabel(self)",globs, locs) for input_name in self.input_name_list]
-        self.tableView = QtWidgets.QTableWidget(self)
-        self.tableView.setHidden(True)
 
-        x_y_values_for_label = []
-        label_move_y_value = 70
+
+    def iniUI(self):
+        globs, locs = globals(), locals()   #get global & local variables
+
+        #list comprehension to set up 24 labels called LABEL1 to LABEL24 and INPUT1 to INPUT24
+        [exec(f"self.{LABEL_NAME} = QtWidgets.QLabel(self)", globs, locs) for LABEL_NAME in self.LABEL_NAME_LIST]
+        [exec(f"self.{INPUT_NAME} = QtWidgets.QLabel(self)", globs, locs) for INPUT_NAME in self.INPUT_NAME_LIST]
+        
+        #set up Table widget & hide it -> getting filled by "open_sheet"-function
+        self.WIDGET_TABLE_VIEW = QtWidgets.QTableWidget(self)
+        self.WIDGET_TABLE_VIEW.setHidden(True)
+        self.WIDGET_TABLE_VIEW.move(15,100)
+        self.WIDGET_TABLE_VIEW.setMinimumWidth(300)
+        self.WIDGET_TABLE_VIEW.setMaximumWidth(300)
+        self.WIDGET_TABLE_VIEW.setMinimumHeight(245)
+        self.WIDGET_TABLE_VIEW.setMaximumHeight(245)
+
+        #define coordinates for each "LABEL"- & "INPUT"-label & move them to according positions
+        LABEL_X_Y_COORDS = []
+        INPUT_X_Y_COORDS = []
+        Y_COORD = 70
+        INPUT_X_COORD = 20
         for i in range(1,25,1):
             if i < 10:
-                x_value = 10
+                LABEL_X_COORD = 10
             elif 9 < i <= 12:
-                x_value = 6
+                LABEL_X_COORD = 6
             elif i == 13:
-                x_value = 180
-                label_move_y_value = 70
-            label_move_y_value += 20
-            x_y_values_for_label.append([x_value,label_move_y_value])
+                INPUT_X_COORD = 200
+                LABEL_X_COORD = 180
+                Y_COORD = 70
+            Y_COORD += 20
+            LABEL_X_Y_COORDS.append([LABEL_X_COORD, Y_COORD])
+            INPUT_X_Y_COORDS.append([INPUT_X_COORD,Y_COORD])
 
-        [exec(f"self.{self.label_name_list[index]}.move(*{x_y_values_for_label[index]})",globs, locs) for index in range(len(self.label_name_list))]
-        [exec(f"self.{self.label_name_list[index]}.setText(str({index}+ 1))",globs, locs) for index in range(len(self.label_name_list))]
+        [exec(f"self.{self.LABEL_NAME_LIST[INDEX]}.move(*{LABEL_X_Y_COORDS[INDEX]})",globs, locs) for INDEX in range(len(self.LABEL_NAME_LIST))]
+        [exec(f"self.{self.INPUT_NAME_LIST[INDEX]}.move(*{INPUT_X_Y_COORDS[INDEX]})",globs, locs) for INDEX in range(len(self.INPUT_NAME_LIST))]
 
-        x_y_values_for_input = []
-        input_move_y_value = 70
-        for i in range(1,25,1):
-            if i <= 12:
-                x_value = 20
-            elif i == 13:
-                x_value = 200
-                input_move_y_value = 70
-            input_move_y_value += 20
-            x_y_values_for_input.append([x_value,input_move_y_value])
+        #list comprehension to set text for each "LABEL"-label
+        [exec(f"self.{self.LABEL_NAME_LIST[INDEX]}.setText(str({INDEX} + 1))",globs, locs) for INDEX in range(len(self.LABEL_NAME_LIST))]
         
-        [exec(f"self.{self.input_name_list[index]}.move(*{x_y_values_for_input[index]})",globs, locs) for index in range(len(self.input_name_list))]
+        #set up labels and move them to according positions -> "INPUT" named labels get their text from function "passinInformation" in MainWindow_libraries.py
+        self.LABEL_SAMPLE = QtWidgets.QLabel(self)
+        self.LABEL_SAMPLE.setText('sample name:')
+        self.LABEL_SAMPLE.move(20, 70)
         
-        self.label_sample = QtWidgets.QLabel(self)
-        self.label_sample.setText('sample name:')
-        self.label_sample.move(20, 70)
+        self.LABEL_SEQ_KIT = QtWidgets.QLabel(self)
+        self.LABEL_SEQ_KIT.move(20, 10)
+        self.LABEL_SEQ_KIT.setText('kit:')
+        self.INPUT_SEQ_KIT = QtWidgets.QLabel(self)
+        self.INPUT_SEQ_KIT.resize(200, 30)
+        self.INPUT_SEQ_KIT.move(115, 10)
+
+        self.LABEL_BARCODE_KIT = QtWidgets.QLabel(self)
+        self.LABEL_BARCODE_KIT.move(20, 30)
+        self.LABEL_BARCODE_KIT.setText('barcoding kit:')
+        self.INPUT_BARCODE_KIT = QtWidgets.QLabel(self)
+        self.INPUT_BARCODE_KIT.resize(200, 30)
+        self.INPUT_BARCODE_KIT.move(115, 30)
         
-        self.kitlabel = QtWidgets.QLabel(self)
-        self.kitlabel.move(20, 10)
-        self.kitlabel.setText('kit:')
-        self.input_kit = QtWidgets.QLabel(self)
-        self.input_kit.move(115, 10)
+        self.LABEL_FLOWCELL_TYPE = QtWidgets.QLabel(self)
+        self.LABEL_FLOWCELL_TYPE.move(20, 50)
+        self.LABEL_FLOWCELL_TYPE.setText('flowcell:')
+        self.INPUT_FLOWCELL_TYPE = QtWidgets.QLabel(self)
+        self.INPUT_FLOWCELL_TYPE.resize(200, 30)
+        self.INPUT_FLOWCELL_TYPE.move(115, 50)
 
-        self.barlabel = QtWidgets.QLabel(self)
-        self.barlabel.move(20, 30)
-        self.barlabel.setText('barcoding kit:')
-        self.input_barcode = QtWidgets.QLabel(self)
-        self.input_barcode.move(115, 30)
-        
-        self.barcodinglabel = QtWidgets.QLabel(self)
-        self.barcodinglabel.move(20, 50)
-        self.barcodinglabel.setText('flowcell:')
-        self.input_flowcell = QtWidgets.QLabel(self)
-        self.input_flowcell.move(115, 50)
-
-        self.button = QtWidgets.QPushButton(self)
-        self.button.setText('ok!')
-        self.button.move(230, 355)
-        self.button.clicked.connect(self.close)#close window2
+        #set up pushbutton to close window
+        self.PUSHBUTTON_CLOSE = QtWidgets.QPushButton(self)
+        self.PUSHBUTTON_CLOSE.setText('ok!')
+        self.PUSHBUTTON_CLOSE.move(230, 355)
+        self.PUSHBUTTON_CLOSE.clicked.connect(self.close)   #closes window2
 
 
-    def hide_and_show(self, first_label_index, last_label_index, BOOLEAN):   #hide or show labels
+    def hide_and_show(self, first_label_index, last_label_index, BOOLEAN):  #function to hide/show labels and inputs
         globs, locs = globals(), locals()
-        #list comprehension build string (exec) using label_name an then execute the command
-        [exec(f'self.{label_name}.setHidden({BOOLEAN})', globs,locs) for label_name in self.label_name_list[(first_label_index - 1):last_label_index]]
-        [exec(f'self.{input_name}.setHidden({BOOLEAN})', globs,locs) for input_name in self.input_name_list[(first_label_index - 1):last_label_index]]
-        self.tableView.setHidden(True)
+        #list comprehension to execute command "self.LABELX.setHidden(BOOLEAN)" for each Label and Input name -> Boolean is either true or false
+        [exec(f'self.{LABEL_NAME}.setHidden({BOOLEAN})', globs,locs) for LABEL_NAME in self.LABEL_NAME_LIST[(first_label_index - 1):last_label_index]]
+        [exec(f'self.{INPUT_NAME}.setHidden({BOOLEAN})', globs,locs) for INPUT_NAME in self.INPUT_NAME_LIST[(first_label_index - 1):last_label_index]]
+        self.WIDGET_TABLE_VIEW.setHidden(True)
 
 
     def open_sheet(self):
-        #file_1 = global variable with suffix from uploaded file
+        #SAMPLE_INFO_FILE_SUFFIX = global variable -> suffix (.csv, .tsv, .xlsx) of the uploaded sample information sheet (barcode, sampleID)
         #self.tableWidget.setItem(0,0, QtWidgets.QTableWidgetItem("barcode")
-        column = 0
-        if self.FILE_1 == 'csv':
-            self.tableView.setRowCount(0)
-            self.tableView.setColumnCount(2)
-            my_file = pd.read_csv(self.UPLOAD_SAMPLE_INFO_PATH, sep=',',header=None)
-            my_file_rows = len(my_file)
-            my_file_columns = len(my_file.columns)
-            self.tableView.setRowCount(my_file_rows)
-            self.tableView.setColumnCount(my_file_columns)
-            for rows in range(0, my_file_rows):
-                barcode = my_file.loc[rows, 0]
-                sample_id = my_file.loc[rows, 1]
-                self.tableView.setItem(rows,column, QtWidgets.QTableWidgetItem(barcode))
-                column = column + 1
-                self.tableView.setItem(rows,column, QtWidgets.QTableWidgetItem(sample_id))
-                column = 0
+        self.WIDGET_TABLE_VIEW.setRowCount(0)
+        self.WIDGET_TABLE_VIEW.setColumnCount(2)
+
+        if self.SAMPLE_INFO_FILE_SUFFIX == 'xlsx':
+            SAMPLE_INFO_DF = pd.read_excel(self.SAMPLE_INFO_FILE_PATH, header = None)
+        
+        elif self.SAMPLE_INFO_FILE_SUFFIX == 'csv':
+            SAMPLE_INFO_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, sep = ',', header = None)
+        
+        elif self.SAMPLE_INFO_FILE_SUFFIX == 'tsv':
+            SAMPLE_INFO_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, header = None)
             
-        column = 0
-        if self.FILE_1 == 'xlsx':
-            self.tableView.setRowCount(0)
-            self.tableView.setColumnCount(2)
-            my_file = pd.read_excel(self.UPLOAD_SAMPLE_INFO_PATH, header=None)
-            my_file_rows = len(my_file)
-            my_file_columns = len(my_file.columns)
-            self.tableView.setRowCount(my_file_rows)
-            self.tableView.setColumnCount(my_file_columns)
-            for rows in range(0, my_file_rows):
-                barcode = my_file.loc[rows, 0]
-                sample_id = my_file.loc[rows, 1]
-                self.tableView.setItem(rows,column, QtWidgets.QTableWidgetItem(str(barcode)))
-                column = column + 1
-                self.tableView.setItem(rows,column, QtWidgets.QTableWidgetItem(sample_id))
-                column = 0
-        self.tableView.move(15,100)
-        self.tableView.setMaximumWidth(240)
-        self.tableView.setMinimumWidth(240)
-        self.tableView.setMaximumHeight(250)
-        self.tableView.setMinimumHeight(250)
-        self.tableView.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tableView.setHidden(False)
-        self.tableView.show                
+        SAMPLE_INFO_DF_ROWS = len(SAMPLE_INFO_DF)
+        my_file_columns = len(SAMPLE_INFO_DF.columns)
+        self.WIDGET_TABLE_VIEW.setRowCount(SAMPLE_INFO_DF_ROWS)
+        for ROWS in range(0, SAMPLE_INFO_DF_ROWS):
+            BARCODE = SAMPLE_INFO_DF.loc[ROWS, 0]
+            SAMPLE_ID = SAMPLE_INFO_DF.loc[ROWS, 1]
+            self.WIDGET_TABLE_VIEW.setItem(ROWS, 0, QtWidgets.QTableWidgetItem(BARCODE))
+            self.WIDGET_TABLE_VIEW.setItem(ROWS, 1, QtWidgets.QTableWidgetItem(SAMPLE_ID))
+
+        self.WIDGET_TABLE_VIEW.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.WIDGET_TABLE_VIEW.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.WIDGET_TABLE_VIEW.setHidden(False)
+        self.WIDGET_TABLE_VIEW.show                
 
 
     def displayInfo(self):  #shows window2

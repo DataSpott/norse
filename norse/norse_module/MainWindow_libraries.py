@@ -17,7 +17,7 @@ from .Window2_libraries import *
 from .validator_libraries import *
 from pathlib import Path
 
-VERSION = "0.5.0"
+VERSION = "1.0.0"
 
 class MyWindow(QMainWindow):    #create a window through the initUI() method, and call it in the initialization method init()
     
@@ -226,6 +226,7 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         #set up upload button for user barcode-file
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO = QtWidgets.QPushButton(self)
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.setText('upload sample information')
+        self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.adjustSize()
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.setDisabled(True)
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.move(540,350)
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.clicked.connect(self.upload_sample_info)
@@ -818,33 +819,33 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
     
 
     def passinInformation(self):    #give infos from Mainwindow to Window2 to display there
-        self.WINDOW2.input_flowcell.setText(self.INPUT_FLOWCELL_TYPE.currentText())
-        self.WINDOW2.input_kit.setText(self.INPUT_SEQUENCING_KIT.currentText())
-        self.WINDOW2.input_barcode.setText(self.INPUT_BARCODE_KIT.currentText())
-        self.WINDOW2.input1.setText(self.LINEEDIT1.text())
-        self.WINDOW2.input3.setText(self.LINEEDIT3.text())
-        self.WINDOW2.input2.setText(self.LINEEDIT2.text())
-        self.WINDOW2.input4.setText(self.LINEEDIT4.text())
-        self.WINDOW2.input5.setText(self.LINEEDIT5.text())
-        self.WINDOW2.input6.setText(self.LINEEDIT6.text())
-        self.WINDOW2.input7.setText(self.LINEEDIT7.text())
-        self.WINDOW2.input8.setText(self.LINEEDIT8.text())
-        self.WINDOW2.input9.setText(self.LINEEDIT9.text())
-        self.WINDOW2.input10.setText(self.LINEEDIT10.text())
-        self.WINDOW2.input11.setText(self.LINEEDIT11.text())
-        self.WINDOW2.input12.setText(self.LINEEDIT12.text())
-        self.WINDOW2.input13.setText(self.LINEEDIT13.text())
-        self.WINDOW2.input14.setText(self.LINEEDIT14.text())
-        self.WINDOW2.input15.setText(self.LINEEDIT15.text())
-        self.WINDOW2.input16.setText(self.LINEEDIT16.text())
-        self.WINDOW2.input17.setText(self.LINEEDIT17.text())
-        self.WINDOW2.input18.setText(self.LINEEDIT18.text())
-        self.WINDOW2.input19.setText(self.LINEEDIT19.text())
-        self.WINDOW2.input20.setText(self.LINEEDIT20.text())
-        self.WINDOW2.input21.setText(self.LINEEDIT21.text())
-        self.WINDOW2.input22.setText(self.LINEEDIT22.text())
-        self.WINDOW2.input23.setText(self.LINEEDIT23.text())
-        self.WINDOW2.input24.setText(self.LINEEDIT24.text())
+        self.WINDOW2.INPUT_FLOWCELL_TYPE.setText(self.INPUT_FLOWCELL_TYPE.currentText())
+        self.WINDOW2.INPUT_SEQ_KIT.setText(self.INPUT_SEQUENCING_KIT.currentText())
+        self.WINDOW2.INPUT_BARCODE_KIT.setText(self.INPUT_BARCODE_KIT.currentText())
+        self.WINDOW2.INPUT1.setText(self.LINEEDIT1.text())
+        self.WINDOW2.INPUT2.setText(self.LINEEDIT2.text())
+        self.WINDOW2.INPUT3.setText(self.LINEEDIT3.text())
+        self.WINDOW2.INPUT4.setText(self.LINEEDIT4.text())
+        self.WINDOW2.INPUT5.setText(self.LINEEDIT5.text())
+        self.WINDOW2.INPUT6.setText(self.LINEEDIT6.text())
+        self.WINDOW2.INPUT7.setText(self.LINEEDIT7.text())
+        self.WINDOW2.INPUT8.setText(self.LINEEDIT8.text())
+        self.WINDOW2.INPUT9.setText(self.LINEEDIT9.text())
+        self.WINDOW2.INPUT10.setText(self.LINEEDIT10.text())
+        self.WINDOW2.INPUT11.setText(self.LINEEDIT11.text())
+        self.WINDOW2.INPUT12.setText(self.LINEEDIT12.text())
+        self.WINDOW2.INPUT13.setText(self.LINEEDIT13.text())
+        self.WINDOW2.INPUT14.setText(self.LINEEDIT14.text())
+        self.WINDOW2.INPUT15.setText(self.LINEEDIT15.text())
+        self.WINDOW2.INPUT16.setText(self.LINEEDIT16.text())
+        self.WINDOW2.INPUT17.setText(self.LINEEDIT17.text())
+        self.WINDOW2.INPUT18.setText(self.LINEEDIT18.text())
+        self.WINDOW2.INPUT19.setText(self.LINEEDIT19.text())
+        self.WINDOW2.INPUT20.setText(self.LINEEDIT20.text())
+        self.WINDOW2.INPUT21.setText(self.LINEEDIT21.text())
+        self.WINDOW2.INPUT22.setText(self.LINEEDIT22.text())
+        self.WINDOW2.INPUT23.setText(self.LINEEDIT23.text())
+        self.WINDOW2.INPUT24.setText(self.LINEEDIT24.text())
 
         self.WINDOW2.displayInfo()
 
@@ -859,12 +860,12 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
     def upload_sample_info(self):    #function to upload barcode-sampleID file
         #download template, so its unique to read 
         try:
-            self.UPLOAD_SAMPLE_INFO_PATH, _ = QFileDialog.getOpenFileName(self, 'Select sample sheet',"~", "data files(*.csv *.xlsx)")
-            self.WINDOW2.UPLOAD_SAMPLE_INFO_PATH = self.UPLOAD_SAMPLE_INFO_PATH
-            FILENAME =  QFileInfo(self.UPLOAD_SAMPLE_INFO_PATH).fileName()
+            self.SAMPLE_INFO_FILE_PATH, _ = QFileDialog.getOpenFileName(self, 'Select sample sheet',"~", "data files(*.csv *.tsv *.xlsx)")
+            self.WINDOW2.SAMPLE_INFO_FILE_PATH = self.SAMPLE_INFO_FILE_PATH
+            FILENAME =  QFileInfo(self.SAMPLE_INFO_FILE_PATH).fileName()
 
-            self.FILE_1 = FILENAME.split(".",1)[1]
-            self.WINDOW2.FILE_1 = self.FILE_1
+            self.SAMPLE_INFO_FILE_SUFFIX = FILENAME.split(".",1)[1]
+            self.WINDOW2.SAMPLE_INFO_FILE_SUFFIX = self.SAMPLE_INFO_FILE_SUFFIX
             self.WINDOW2.open_sheet()
             
         except IndexError:

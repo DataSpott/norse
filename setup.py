@@ -3,17 +3,15 @@ import glob
 import os
 import pkg_resources
 
-
-
 setup(
       name='norse',
-      version="0.3.2",
+      version="1.0.0",
       packages=find_packages(),
       include_package_data=True,
       scripts=['norse/main_script.py'],
       description='na',
       url='https://github.com/t3ddezz/norse',
-      author='anton',
+      author='t3deezz, replikation, Dataspott',
       entry_points="""
       [console_scripts]
       norse = norse.main_script:main
