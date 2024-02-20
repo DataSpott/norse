@@ -174,14 +174,14 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.LABEL_BARCODE_CHOICE.move(10, 200)
 
         self.RADIOBUTTON_CHOOSE_1_SAMPLE = QtWidgets.QRadioButton(self)  #set up round button for "no"
-        self.RADIOBUTTON_CHOOSE_1_SAMPLE.toggled.connect(self.radioclicked_no)  #toggle function "radioclicked_no" when button is selected
+        self.RADIOBUTTON_CHOOSE_1_SAMPLE.toggled.connect(self.radiobutton_no)  #toggle function "radiobutton_no" when button is selected
         self.RADIOBUTTON_CHOOSE_1_SAMPLE.move(10, 225)
         self.LABEL_CHOOSE_1_SAMPLE = QtWidgets.QLabel(self)
         self.LABEL_CHOOSE_1_SAMPLE.setText('no')
         self.LABEL_CHOOSE_1_SAMPLE.move(30, 225)
 
         self.RADIOBUTTON_CHOOSE_12_SAMPLE = QtWidgets.QRadioButton(self)
-        self.RADIOBUTTON_CHOOSE_12_SAMPLE.toggled.connect(self.radioclicked_yes)
+        self.RADIOBUTTON_CHOOSE_12_SAMPLE.toggled.connect(self.radiobutton_yes)
         self.RADIOBUTTON_CHOOSE_12_SAMPLE.move(10, 245)
         self.LABEL_CHOOSE_12_SAMPLE = QtWidgets.QLabel(self)
         self.LABEL_CHOOSE_12_SAMPLE.setText('yes (12)')
@@ -215,7 +215,7 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.RADIOBUTTON_GROUP_CHOOSE_SAMPLES.addButton(self.RADIOBUTTON_CHOOSE_24_SAMPLES)
         self.RADIOBUTTON_GROUP_CHOOSE_SAMPLES.addButton(self.RADIOBUTTON_CHOOSE_SAMPLE_SHEET)
 
-        #set up button to upload info??? -> button is only active when using 96-sample sheet input
+        #set up button to show info-text for sample info-sheet upload -> uses function "info"; only active when using 96-sample sheet input
         self.PUSHBUTTON_INFO_MSG = QtWidgets.QPushButton(self)
         self.PUSHBUTTON_INFO_MSG.setText('info')
         self.PUSHBUTTON_INFO_MSG.setDisabled(True)
@@ -276,16 +276,12 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.INPUT_ADDITIONAL_INFO.setPlaceholderText(f"Additional information:\tThis info will be uploaded to the server with run_info.txt")
         self.INPUT_ADDITIONAL_INFO.setGeometry(430, 400, 365, 195)
 
-        #set up label for barcdes yes/no button???
-        self.LABEL_BARCODE_YES_NO = QtWidgets.QLabel(self)
-        self.LABEL_BARCODE_YES_NO.setHidden(True)
-
         #set up push button to check data
         self.PUSHBUTTON_CHECK_DATA = QtWidgets.QPushButton(self)
         self.PUSHBUTTON_CHECK_DATA.setText('check data')
         self.PUSHBUTTON_CHECK_DATA.move(40, 350)
         self.PUSHBUTTON_CHECK_DATA.setWhatsThis('check your data')
-        self.PUSHBUTTON_CHECK_DATA.clicked.connect(self.passinInformation)   #upon clicking call function to open another window
+        self.PUSHBUTTON_CHECK_DATA.clicked.connect(self.passInformation)   #upon clicking call function to open another window
 
         #set up push button to choose upload dir
         self.PUSHBUTTON_CHOOSE_UPLOAD_DIR = QtWidgets.QPushButton(self)
@@ -306,9 +302,9 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.PUSHBUTTON_UPLOAD_TO_SERVER.clicked.connect(self.upload)
 
         #set up hidden, empty label to choose amount of samples in upload_to_server function
-        self.LABEL_UPLOAD = QtWidgets.QLabel(self)
-        self.LABEL_UPLOAD.setText('no')
-        self.LABEL_UPLOAD.setHidden(True)
+        self.LABEL_BARCODE_BUTTON_STATUS = QtWidgets.QLabel(self)
+        self.LABEL_BARCODE_BUTTON_STATUS.setText('no')
+        self.LABEL_BARCODE_BUTTON_STATUS.setHidden(True)
 
         """self.label_image = QtWidgets.QLabel(self)
         self.label_image.move(300, 140)
@@ -404,7 +400,7 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         #def variables using inputs from the according GUI fields
         ADDITIONAL_INFO = self.INPUT_ADDITIONAL_INFO.toPlainText()
         BARCODE_KIT = self.INPUT_BARCODE_KIT.currentText()
-        BARCODE_BUTTON_STATUS = self.LABEL_UPLOAD.text()
+        BARCODE_BUTTON_STATUS = self.LABEL_BARCODE_BUTTON_STATUS.text()
         DATE = datetime.today().strftime('%Y-%m-%d-%H%M%S')
         EXCLUDE_FAST5_FILES_STATUS = self.EXCLUDE_FAST5_FILES.isChecked()
         FLOWCELL_TYPE = self.INPUT_FLOWCELL_TYPE.currentText()
@@ -522,7 +518,6 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
                 BARCODE_SAMPLE_DF = pd.read_csv(self.UPLOAD_SAMPLE_PATH, sep = "\t", header=None)
             elif self.FILE_1 == "xlsx":
                 BARCODE_SAMPLE_DF = pd.read_excel(self.UPLOAD_SAMPLE_PATH, header=None)
-            #could need here else confdition with exit if file-format is not matching one of the above???
 
             #read dataframe
             ROW = 0
@@ -655,7 +650,7 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
                 x = MSG_SEQUENCING_KIT_INVALID.exec_()  # this will show our messagebox
                 self.INPUT_SEQUENCING_KIT.setEditText(f"{SEQUENCING_KIT_LIST[0]}")
 
-    def barcode_kit_changed(self):  #def function to check input for barcode-kit field in GUI -> could add barcode-kit restriction analog to seq-kit/flowcell
+    def barcode_kit_changed(self):  #def function to check input for barcode-kit field in GUI (analog to "sequencing_kit_changed" function)
         with open('/norse/data/barcoding_kit_data.txt') as file:
             BARCODE_KIT_LIST = [LINE.rstrip() for LINE in file]
 
@@ -707,17 +702,17 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
 
         #write user-info (username, ip-addresse, path-on-server) to file -> file is loaded when Norse is opened, prefilling the according fields
         USER_INFO = open(self.NORSE_USER_INFO_PATH, "w+")   #open new file with write acess
-        USER_INFO.truncate(0)       
-        USER_INFO.write(f'{USERNAME}\n{IP_ADDRESSE}\n{SERVER_PATH}')
-        USER_INFO.close()
+        USER_INFO.truncate(0)   #delete file content by "resizing" it to 0 bytes
+        USER_INFO.write(f'{USERNAME}\n{IP_ADDRESSE}\n{SERVER_PATH}')    #write variables to file
+        USER_INFO.close()   #close file
 
         #set-up msg
         TEST_UPLOAD_MSG = QMessageBox()
         TEST_UPLOAD_MSG.setWindowTitle("test connection")
 
-        # try:
+        #execute rsync-dryrun to simulate upload and capture exit code
         RSYNC_TEST_EXIT_CODE = os.system(f'sshpass -p {PASSWORD} rsync --dry-run -acrq "norse/data/run_info.txt" {USERNAME}@{IP_ADDRESSE}:"{SERVER_PATH}"/ >/dev/null 2>&1')
-            
+  
         if RSYNC_TEST_EXIT_CODE == 0:
             TEST_UPLOAD_MSG.setText("Connected successfull")
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Information)
@@ -736,17 +731,22 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         x = TEST_UPLOAD_MSG.exec_()
 
 
-    def radioclicked_no(self):  #button: no barcodes
+    def radiobutton_no(self):  #button: no barcodes
+        #hide for this barcode-option unnecessary sample-id fields in Window2 (check-data window)
         self.WINDOW2.hide_and_show(2,24,True)
-        self.LABEL_UPLOAD.setText('no')
-        self.LABEL_BARCODE_YES_NO.setText('no')
-        globs, locs = globals(), locals()
+
+        self.LABEL_BARCODE_BUTTON_STATUS.setText('no')  #set text for label
+        globs, locs = globals(), locals()   #get global and local variables
+        
+        #hide all Label- and Input-fields in the MainWindow
         [exec(f'self.{LABEL_NAME}.setHidden(True)', globs,locs) for LABEL_NAME in self.LABEL_NAME_LIST_MAIN[(0):24]]
         [exec(f'self.{INPUT_NAME}.setHidden(True)', globs,locs) for INPUT_NAME in self.INPUT_NAME_LIST_MAIN[(0):24]]
 
+        #show the for this barcode-option necessary LABEL- and INPUT-fields in the MainWindow
         self.LABEL1.setHidden(False)
         self.LINEEDIT1.setHidden(False)
 
+        #hide and disable buttons and elements that are not shown when this barcoding-option is chosen
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.setHidden(True)
         self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.setDisabled(True)
         self.PUSHBUTTON_INFO_MSG.setHidden(True)
@@ -757,11 +757,10 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.LABEL_MOCK_CSV.setHidden(True)
    
 
-    def radioclicked_yes(self): #button: 1-12 samples with barcodes
+    def radiobutton_yes(self): #button: 1-12 samples with barcodes; analog to function "radiobutton_no"
         self.WINDOW2.hide_and_show(1,12,False)
         self.WINDOW2.hide_and_show(13,24,True)
-        self.LABEL_UPLOAD.setText('yes')
-        self.LABEL_BARCODE_YES_NO.setText('yes')
+        self.LABEL_BARCODE_BUTTON_STATUS.setText('yes')
         
         globs, locs = globals(), locals()
         [exec(f'self.{LABEL_NAME}.setHidden(False)', globs, locs) for LABEL_NAME in self.LABEL_NAME_LIST_MAIN[(0):12]]
@@ -780,8 +779,8 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.LABEL_MOCK_CSV.setHidden(True)
 
 
-    def radiobutton_24(self):   #button: 1-24 samples with barcodes
-        self.LABEL_UPLOAD.setText('24')
+    def radiobutton_24(self):   #button: 1-24 samples with barcodes; analog to function "radiobutton_no"
+        self.LABEL_BARCODE_BUTTON_STATUS.setText('24')
 
         globs, locs = globals(), locals()
         [exec(f'self.{LABEL_NAME}.setHidden(False)', globs, locs) for LABEL_NAME in self.LABEL_NAME_LIST_MAIN[(0):24]]
@@ -799,8 +798,8 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.LABEL_MOCK_CSV.setHidden(True)
 
 
-    def radiobutton_96(self):   #button: up to 96 samples with barcodes
-            self.LABEL_UPLOAD.setText('96')
+    def radiobutton_96(self):   #button: up to 96 samples with barcodes; analog to function "radiobutton_no"
+            self.LABEL_BARCODE_BUTTON_STATUS.setText('96')
             self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.setHidden(False)
             self.PUSHBUTTON_UPLOAD_SAMPLE_INFO.setDisabled(False)
             self.PUSHBUTTON_INFO_MSG.setHidden(False)
@@ -818,7 +817,8 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
             self.WINDOW2.hide()
     
 
-    def passinInformation(self):    #give infos from Mainwindow to Window2 to display there
+    def passInformation(self):    #function to give infos from Mainwindow to Window2 (WINDOW2_libraries.py) to display there
+        #writes current value of the variable to the variable in Window2
         self.WINDOW2.INPUT_FLOWCELL_TYPE.setText(self.INPUT_FLOWCELL_TYPE.currentText())
         self.WINDOW2.INPUT_SEQ_KIT.setText(self.INPUT_SEQUENCING_KIT.currentText())
         self.WINDOW2.INPUT_BARCODE_KIT.setText(self.INPUT_BARCODE_KIT.currentText())
@@ -847,10 +847,11 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.WINDOW2.INPUT23.setText(self.LINEEDIT23.text())
         self.WINDOW2.INPUT24.setText(self.LINEEDIT24.text())
 
+        #show Window2
         self.WINDOW2.displayInfo()
 
 
-    def password_hide_show(self, STATE):   #function to show/hide password in according field
+    def password_hide_show(self, STATE):   #function to show/hide password in according field based on status of the tick-box
         if STATE == QtCore.Qt.Checked:
             self.INPUT_PASSWORD.setEchoMode(QtWidgets.QLineEdit.Normal)
         else:
@@ -858,22 +859,29 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
 
 
     def upload_sample_info(self):    #function to upload barcode-sampleID file
-        #download template, so its unique to read 
         try:
+            #select file from directory -> only allowing .csv/.tsv/.xlsx-files
             self.SAMPLE_INFO_FILE_PATH, _ = QFileDialog.getOpenFileName(self, 'Select sample sheet',"~", "data files(*.csv *.tsv *.xlsx)")
-            self.WINDOW2.SAMPLE_INFO_FILE_PATH = self.SAMPLE_INFO_FILE_PATH
+            
+            
+            
+            #get file-name and suffix
             FILENAME =  QFileInfo(self.SAMPLE_INFO_FILE_PATH).fileName()
-
             self.SAMPLE_INFO_FILE_SUFFIX = FILENAME.split(".",1)[1]
+
+            #pass variables to WINDOW2 variables (WINDOW2_libraries.py) for use there
+            self.WINDOW2.SAMPLE_INFO_FILE_PATH = self.SAMPLE_INFO_FILE_PATH
             self.WINDOW2.SAMPLE_INFO_FILE_SUFFIX = self.SAMPLE_INFO_FILE_SUFFIX
+
+            #execute WINDOW2
             self.WINDOW2.open_sheet()
             
         except IndexError:
             print('no file selected')
 
 
-    def info(self): #function to ???
-        MSG_SAMPLE_SHEET_INFO = QMessageBox()
-        MSG_SAMPLE_SHEET_INFO.setWindowTitle("data input")
+    def info(self): #function to show info-text for uploading a sample info-sheet (.csv/.tsv/.xlsx) in message-window
+        MSG_SAMPLE_SHEET_INFO = QMessageBox()   #set up message-window
+        MSG_SAMPLE_SHEET_INFO.setWindowTitle("data input")  #set title for message; text is set text below
         MSG_SAMPLE_SHEET_INFO.setText("If you wanna use 96 samples, please create a csv (comma-separated; .csv), tsv (tab-separated; .tsv) or excel (.xlsx) file as shown in the main window.\n\nIn case of a .csv file use comma and not semicolon!\nRemember to write the headers (\"barcode\", \"sample_id\") not in caps.")
-        x = MSG_SAMPLE_SHEET_INFO.exec_()
+        x = MSG_SAMPLE_SHEET_INFO.exec_()   #open message
