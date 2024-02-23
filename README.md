@@ -1,6 +1,8 @@
 # norse
 
-##  **N**an**O**op**R**e **SE**quencing 
+**Based on the original program by [t3ddezz](https://github.com/t3ddezz/norse), [replication](https://github.com/replikation) and DataSpott. Copied for maintenance**
+
+##  **N**an**O**po**R**e **SE**quencing 
 GUI for nanopore data transfer to a server and sample informations. All informations are collected in a `run_info.txt` file that is stored with the uploaded data.
 
 ![screen](data/interface.png)
@@ -66,9 +68,22 @@ docker run --rm \
   norse:build \
   norse -r
 ```
-
+**or**
+use the newest docker from [dockerhub](https://hub.docker.com/repository/docker/dataspott/norse/general):
+```
+# run docker image from dockerhub (insert respective VERSION)
+docker run --rm \
+  -u qtuser \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -e DISPLAY=unix$DISPLAY \
+  --network host \
+  -v $HOME:/home/qtuser \
+  -v $PWD:/upload \
+  dataspott/norse:VERSION \
+  norse -r
+```
 
 ## Basic usage
 
-Run `norse -r `
+Run `norse -r` to start the program or `norse -v` to show the program version.
 

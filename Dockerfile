@@ -1,3 +1,6 @@
+# USAGE
+# navigate to norse directory where this file is located: cd /path/to/norse
+# execute the docker build command (including the point at the end): docker build -t USER/norse:test .
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
