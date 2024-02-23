@@ -3,7 +3,7 @@
 **Based on the original program by [t3ddezz](https://github.com/t3ddezz/norse), [replication](https://github.com/replikation) and DataSpott. Copied for maintenance**
 
 ##  **N**an**O**po**R**e **SE**quencing 
-GUI for nanopore data transfer to a server and sample informations. All informations are collected in a `run_info.txt` file that is stored with the uploaded data.
+GUI for the upload of nanopore data and sample information to a server. All information is collected in a `run_info.txt` file stored with the uploaded data.
 
 ![screen](data/interface.png)
 
@@ -20,7 +20,7 @@ GUI for nanopore data transfer to a server and sample informations. All informat
 
 ```shell=
 # choose a suitable install location (e.g home dir)
-git clone https://github.com/t3ddezz/norse.git
+git clone git@github.com:DataSpott/norse.git
 cd norse
 # conda installation
 conda env create -f environment.yml
@@ -52,7 +52,7 @@ norse -v
 ### via docker:
 ```
 # clone git repository and navigate into the dir
-git clone https://github.com/t3ddezz/norse.git && cd norse
+git clone git@github.com:DataSpott/norse.git && cd norse
 
 # create docker image via
 docker build -t norse:build .
@@ -72,6 +72,8 @@ docker run --rm \
 use the newest docker from [dockerhub](https://hub.docker.com/repository/docker/dataspott/norse/general):
 ```
 # run docker image from dockerhub (insert respective VERSION)
+docker pull dataspott/norse:VERSION
+
 docker run --rm \
   -u qtuser \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
