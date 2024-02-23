@@ -1,0 +1,7 @@
+Not used
+Included in Seq-kit
+Unknown/not implemented
+EXP-PBC001
+EXP-PBC096
+SQK-NBD114.24
+SQK-NBD114.96
