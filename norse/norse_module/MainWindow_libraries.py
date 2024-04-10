@@ -18,7 +18,7 @@ from .Window2_libraries import *
 from .validator_libraries import *
 from pathlib import Path
 
-VERSION = "1.0.0"
+VERSION = "1.2.0"
 
 class MyWindow(QMainWindow):    #create a window through the initUI() method, and call it in the initialization method init()
     
