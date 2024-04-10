@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QInputDialog,  QFileDialo
 from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap
 from PyQt5.QtCore import Qt, QFileInfo
 import pandas as pd
+import numpy as np
+import re
 
 class Window2(QMainWindow): #class for window2 (pop up window)
     
@@ -102,11 +104,7 @@ class Window2(QMainWindow): #class for window2 (pop up window)
 
 
     def open_sheet(self):
-        #SAMPLE_INFO_FILE_SUFFIX = global variable -> suffix (.csv, .tsv, .xlsx) of the uploaded sample information sheet (barcode, sampleID)
-        #self.tableWidget.setItem(0,0, QtWidgets.QTableWidgetItem("barcode")
-        self.WIDGET_TABLE_VIEW.setRowCount(0)
-        self.WIDGET_TABLE_VIEW.setColumnCount(2)
-
+        #SAMPLE_INFO_FILE_SUFFIX = global variable -> suffix (.csv, .tsv, .xlsx) of the uploaded sample information sheet (barcode, sampleID)     
         if self.SAMPLE_INFO_FILE_SUFFIX == 'xlsx':
             SAMPLE_INFO_DF = pd.read_excel(self.SAMPLE_INFO_FILE_PATH, header = None)
         
@@ -116,19 +114,29 @@ class Window2(QMainWindow): #class for window2 (pop up window)
         elif self.SAMPLE_INFO_FILE_SUFFIX == 'tsv':
             SAMPLE_INFO_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, header = None)
             
-        SAMPLE_INFO_DF_ROWS = len(SAMPLE_INFO_DF)
-        my_file_columns = len(SAMPLE_INFO_DF.columns)
-        self.WIDGET_TABLE_VIEW.setRowCount(SAMPLE_INFO_DF_ROWS)
-        for ROWS in range(0, SAMPLE_INFO_DF_ROWS):
-            BARCODE = SAMPLE_INFO_DF.loc[ROWS, 0]
-            SAMPLE_ID = SAMPLE_INFO_DF.loc[ROWS, 1]
-            self.WIDGET_TABLE_VIEW.setItem(ROWS, 0, QtWidgets.QTableWidgetItem(BARCODE))
-            self.WIDGET_TABLE_VIEW.setItem(ROWS, 1, QtWidgets.QTableWidgetItem(SAMPLE_ID))
+        SAMPLE_INFO_DF_CLEANED = SAMPLE_INFO_DF.fillna(value = "NaN").replace(r'^\s*$', "NaN", regex = True)
+
+        self.WIDGET_TABLE_VIEW.setColumnCount(2)
+        self.WIDGET_TABLE_VIEW.setRowCount(0)
+
+        for ROWS in range(0, len(SAMPLE_INFO_DF_CLEANED)):
+            BARCODE = SAMPLE_INFO_DF_CLEANED.loc[ROWS, 0]
+            SAMPLE_NAME = str(SAMPLE_INFO_DF_CLEANED.loc[ROWS, 1])
+            
+            if BARCODE != "barcode":
+                BARCODE_CLEANED = str(re.sub('[^0-9]', '', BARCODE))
+            else:
+                BARCODE_CLEANED = BARCODE
+            
+            if SAMPLE_NAME != "NaN":    #skip lines without sample_id
+                self.WIDGET_TABLE_VIEW.insertRow(self.WIDGET_TABLE_VIEW.rowCount()) #add new row to the QTWidget_Table
+                self.WIDGET_TABLE_VIEW.setItem((self.WIDGET_TABLE_VIEW.rowCount() - 1), 0, QtWidgets.QTableWidgetItem(BARCODE_CLEANED)) #add according barcode to first column of last row
+                self.WIDGET_TABLE_VIEW.setItem((self.WIDGET_TABLE_VIEW.rowCount() - 1), 1, QtWidgets.QTableWidgetItem(SAMPLE_NAME))
 
         self.WIDGET_TABLE_VIEW.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.WIDGET_TABLE_VIEW.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.WIDGET_TABLE_VIEW.setHidden(False)
-        self.WIDGET_TABLE_VIEW.show                
+        self.WIDGET_TABLE_VIEW.show
 
 
     def displayInfo(self):  #shows window2

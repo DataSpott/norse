@@ -6,6 +6,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QPixmap
 from PyQt5.QtCore import Qt, QFileInfo
 import pandas as pd
 import io
+import re
 import requests
 import os.path
 from datetime import datetime
@@ -306,12 +307,6 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.LABEL_BARCODE_BUTTON_STATUS.setText('no')
         self.LABEL_BARCODE_BUTTON_STATUS.setHidden(True)
 
-        """self.label_image = QtWidgets.QLabel(self)
-        self.label_image.move(300, 140)
-        self.label
-        self.image = QtGui.QPixmap('image.png')
-        self.label_image.setPixmap(self.image)"""
-
         #set up hidden table
         self.WIDGET_MOCK_EXCEL_TABLE = QtWidgets.QTableWidget(self)
         self.WIDGET_MOCK_EXCEL_TABLE.move(250, 60)
@@ -412,12 +407,13 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         USERNAME = self.INPUT_USERNAME.text()
 
         #set up message window to capture empty variables from above
-        MSG_UPLOAD_ERROR = QMessageBox()
-        MSG_UPLOAD_ERROR.setWindowTitle("user info")
+        MSG_UPLOAD_ERROR = QMessageBox()     #create new message pop-up
+        MSG_UPLOAD_ERROR.setWindowTitle("user info")    #set title for message pop-up
+
         if USERNAME == "":
-            MSG_UPLOAD_ERROR.setText("username is empty")
-            x = MSG_UPLOAD_ERROR.exec_()
-            return 13
+            MSG_UPLOAD_ERROR.setText("username is empty")   #set text for message pop-up
+            x = MSG_UPLOAD_ERROR.exec_()    #execute message
+            return 13   #breack function execution here
         if IP_ADDRESSE == "":
             MSG_UPLOAD_ERROR.setText("ip-address is empty")
             x = MSG_UPLOAD_ERROR.exec_()
@@ -435,8 +431,29 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
             x = MSG_UPLOAD_ERROR.exec_()
             return 17
 
+        #check if chosen upload dir is empty
+        EMPTY_UPLOAD_INFO_MSG = QMessageBox()   #create new message pop-up
+        EMPTY_UPLOAD_INFO_MSG.setWindowTitle("user info")   #set title for message pop-up
+        EMPTY_UPLOAD_INFO_MSG.addButton(QtWidgets.QPushButton('No'), QMessageBox.NoRole)    #add a "No"-button to message pop-up
+        EMPTY_UPLOAD_INFO_MSG.addButton(QtWidgets.QPushButton('Yes'), QMessageBox.YesRole)  #add a "Yes"-button to message pop-up
+
+        FILE_LIST = []  #empty list to extend on in following for-loop
+        EXCLUDE_FILES_LIST = ["run_info.txt", "samples.csv"]    #list of files to exclude when searching the upload-dir for files
+        for DIR, SUB_DIRS, FILES in os.walk(UPLOAD_DIR_PATH):   #loop through all directories, giving out a 3-tuple for each, consisting of 3 lists itself: [actual Root-Dir, Sub-Dirs in the Root-Dir, Files in Sub-Dirs]
+            FILTERED_FILES = [file for file in FILES if file not in EXCLUDE_FILES_LIST] #create list (list-comprehension) of all found files in the actual root-dir excluding files from EXCLUDE_FILES_LIST
+            FILE_LIST.extend(FILTERED_FILES) #extend FILE_LIST with the file-list of the actual root-directory (creating non-nested list)
+
+        if not FILE_LIST:   #check if FILE_List is empty
+            EMPTY_UPLOAD_INFO_MSG.setText("Chosen upload directory contains no files.\n\nDo you want to continue?") #set text for info-message
+            CONTINUE_BOOLEAN = EMPTY_UPLOAD_INFO_MSG.exec_()    #execute message and save which button the user clicked (exit-status) in variable
+
+            if not CONTINUE_BOOLEAN:    #check if variable is FALSE (User chose "No" in info-message)
+                MSG_UPLOAD_ERROR.setText(f"You chose \"No\". Upload was canceled.")
+                x = MSG_UPLOAD_ERROR.exec() #execute info-message telling that upload was canceled
+                return 18   #stop function execution here
+
         #use individual dir name if user input exists
-        if self.INPUT_DIR_NAME.text():
+        if self.INPUT_DIR_NAME.text():  #check if input for dir-name is not empty
             UPLOAD_DIR_NAME = self.INPUT_DIR_NAME.text()
         else:
             UPLOAD_DIR_NAME = os.path.basename(os.path.normpath(UPLOAD_DIR_PATH))
@@ -445,10 +462,10 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         print(NEW_UPLOAD_DIR_NAME)
 
         #create run_info.txt and samples.csv
-        run_info_file_path = os.path.join(UPLOAD_DIR_PATH, "run_info.txt")    
+        run_info_file_path = os.path.join(UPLOAD_DIR_PATH, "run_info.txt")
         RUN_INFO_FILE = open(run_info_file_path, "w")
 
-        samples_csv_file_path = os.path.join(UPLOAD_DIR_PATH, "samples.csv")    
+        samples_csv_file_path = os.path.join(UPLOAD_DIR_PATH, "samples.csv")
         SAMPLE_CSV_FILE = open(samples_csv_file_path, "w")
 
         #write general information to run_info.txt
@@ -460,12 +477,13 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         
         #write barcode-sampleIDs to run_info.txt and samples.csv
         RUN_INFO_FILE.write("Barcode\tSample-name\n")
-        SAMPLE_CSV_FILE.write("barcode,sample_name\n")
+        SAMPLE_CSV_FILE.write("barcode,sample_id\n")
 
         #no barcodes -> single sample
         if BARCODE_BUTTON_STATUS == 'no':
             LINEEDIT01 = self.LINEEDIT1.text()
             RUN_INFO_FILE.write(f'Sample\t{LINEEDIT01}')
+            SAMPLE_CSV_FILE.write(f'sample,{LINEEDIT01}')
 
         #barcodes 1-12 (active if "yes" or "24" selected)
         elif BARCODE_BUTTON_STATUS in ['yes', '24']:
@@ -508,42 +526,59 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
             
             #write barcodes + sampleIDs to run_info.txt
             for INDEX in range(len(BARCODE_SAMPLE_LIST)):
-                if INDEX < 9:
-                    RUN_INFO_FILE.write(f'barcode0{str(INDEX + 1)}\t{BARCODE_SAMPLE_LIST[INDEX]}\n')
-                    SAMPLE_CSV_FILE.write(f'barcode0{str(INDEX + 1)},{BARCODE_SAMPLE_LIST[INDEX]}\n')
+                BARCODE_NR = INDEX + 1
+                SAMPLE_NAME = BARCODE_SAMPLE_LIST[INDEX]
+                SAMPLE_NAME_CLEANED = re.sub('\s+', ' ', SAMPLE_NAME).strip()   #remove all whitespaces, tabspaces, and newlines from SAMPLE_NAME
+
+                if BARCODE_NR < 10:
+                    BARCODE_STR = "barcode0"
                 else:
-                    RUN_INFO_FILE.write(f'barcode{str(INDEX + 1)}\t{BARCODE_SAMPLE_LIST[INDEX]}\n')
-                    SAMPLE_CSV_FILE.write(f'barcode{str(INDEX + 1)},{BARCODE_SAMPLE_LIST[INDEX]}\n')
+                    BARCODE_STR = "barcode"
+
+                RUN_INFO_FILE.write(f'{BARCODE_STR}{BARCODE_NR}\t{SAMPLE_NAME}\n')
+                if SAMPLE_NAME_CLEANED != "":
+                    SAMPLE_CSV_FILE.write(f'{BARCODE_STR}{BARCODE_NR},{SAMPLE_NAME}\n')
 
         #up to 96 barcodes via user input-file
         elif BARCODE_BUTTON_STATUS == "96":
             #check file type and read into panda dataframe
             if self.SAMPLE_INFO_FILE_SUFFIX == "csv":
-                BARCODE_SAMPLE_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, sep = ',', header=None)
+                BARCODE_SAMPLE_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, sep = ',', header = None)
             elif self.SAMPLE_INFO_FILE_SUFFIX == "tsv":
-                BARCODE_SAMPLE_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, sep = "\t", header=None)
+                BARCODE_SAMPLE_DF = pd.read_csv(self.SAMPLE_INFO_FILE_PATH, sep = "\t", header = None)
             elif self.SAMPLE_INFO_FILE_SUFFIX == "xlsx":
-                BARCODE_SAMPLE_DF = pd.read_excel(self.SAMPLE_INFO_FILE_PATH, header=None)
+                BARCODE_SAMPLE_DF = pd.read_excel(self.SAMPLE_INFO_FILE_PATH, header = None)
+
+            BARCODE_SAMPLE_DF_CLEANED = BARCODE_SAMPLE_DF.fillna(value = "NaN").replace(r'^\s*$', "NaN", regex = True)
 
             #read dataframe
             ROW = 0
-            BARCODE_FILE_DF_LENGTH = len(BARCODE_SAMPLE_DF)
+            BARCODE_FILE_DF_LENGTH = len(BARCODE_SAMPLE_DF_CLEANED)
             while True:
-                if BARCODE_SAMPLE_DF.iloc[ROW, 0] == "barcode":   #detect header
+                if BARCODE_SAMPLE_DF_CLEANED.iloc[ROW, 0] == "barcode":   #detect header
                     ROW = ROW + 1   #set begin to row after header
                     for ROWS in range(ROW, BARCODE_FILE_DF_LENGTH):  #loop over all rows following the header
-                        if ROWS < 10:
-                            RUN_INFO_FILE.write(f'barcode0{str(BARCODE_SAMPLE_DF.iloc[ROWS, 0])}\t{str(BARCODE_SAMPLE_DF.iloc[ROWS, 1])}\n')
-                            SAMPLE_CSV_FILE.write(f'barcode0{str(BARCODE_SAMPLE_DF.iloc[ROWS, 0])},{str(BARCODE_SAMPLE_DF.iloc[ROWS, 1])}\n')
+                        BARCODE_NR_CLEANED = int(re.sub('[^0-9]', '', BARCODE_SAMPLE_DF_CLEANED.iloc[ROWS, 0])) #extract integer from barcode-column by deleting all non-numeric characters
+                        SAMPLE_NAME = str(BARCODE_SAMPLE_DF_CLEANED.iloc[ROWS, 1])
+
+                        if BARCODE_NR_CLEANED < 10:
+                            BARCODE_STR = "barcode0"
                         else:
-                            RUN_INFO_FILE.write(f'barcode{str(BARCODE_SAMPLE_DF.iloc[ROWS, 0])}\t{str(BARCODE_SAMPLE_DF.iloc[ROWS, 1])}\n')
-                            SAMPLE_CSV_FILE.write(f'barcode{str(BARCODE_SAMPLE_DF.iloc[ROWS, 0])},{str(BARCODE_SAMPLE_DF.iloc[ROWS, 1])}\n')
+                            BARCODE_STR = "barcode"
+                        
+                        RUN_INFO_FILE.write(f'{BARCODE_STR}{BARCODE_NR_CLEANED}\t{SAMPLE_NAME}\n')
+                        if SAMPLE_NAME != "NaN":
+                            SAMPLE_CSV_FILE.write(f'{BARCODE_STR}{BARCODE_NR_CLEANED},{SAMPLE_NAME}\n')
+                    
                     break   #end while loop
+                
                 else:
                     ROW = ROW + 1   #increase ROW variable -> go to next row 
                     if ROW == BARCODE_FILE_DF_LENGTH:    #check if actual row is last row in file
                         ROW = 0
-                        break   #add here a sys.exit to tell user he has to rename column???
+                        MSG_UPLOAD_ERROR.setText("Can not find a header containing \"barcode\" in provided sample-sheet. Please make sure to include a header: (\"barcode\", \"sample_id\") not in caps.")
+                        x = MSG_UPLOAD_ERROR.exec()
+                        return 19
 
         #write additional info to run_info.txt
         RUN_INFO_FILE.write(f'\n##Additional info\n{ADDITIONAL_INFO}\n')
@@ -621,10 +656,11 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
                 if RSYNC_EXIT_CODE != 0:
                     MSG_UPLOAD_STATUS.setText("upload failed")
                     x = MSG_UPLOAD_STATUS.exec_()
+                    return 1
                 else:
                     MSG_UPLOAD_STATUS.setText("upload complete")
                     x = MSG_UPLOAD_STATUS.exec_()                      
-                    #sys.exit(0)
+                    return 0
 
         #capture according errors
         except paramiko.AuthenticationException:
@@ -890,5 +926,5 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
     def info(self): #function to show info-text for uploading a sample info-sheet (.csv/.tsv/.xlsx) in message-window
         MSG_SAMPLE_SHEET_INFO = QMessageBox()   #set up message-window
         MSG_SAMPLE_SHEET_INFO.setWindowTitle("data input")  #set title for message; text is set text below
-        MSG_SAMPLE_SHEET_INFO.setText("If you wanna use 96 samples, please create a csv (comma-separated; .csv), tsv (tab-separated; .tsv) or excel (.xlsx) file as shown in the main window.\n\nIn case of a .csv file use comma and not semicolon!\nRemember to write the headers (\"barcode\", \"sample_id\") not in caps.")
+        MSG_SAMPLE_SHEET_INFO.setText("If you wanna use 96 samples, please create a csv (comma-separated; .csv), tsv (tab-separated; .tsv) or excel (.xlsx) file as shown in the main window.\n\nPlease note that only numbers column are considered in the barcode and all other characters are removed. Lines without a sample_id are also ignored. Use the \"check data\"-button to control the appearance.\n\nIn case of a .csv file use comma and not semicolon!\nRemember to write the headers (\"barcode\", \"sample_id\") not in caps.")
         x = MSG_SAMPLE_SHEET_INFO.exec_()   #open message
