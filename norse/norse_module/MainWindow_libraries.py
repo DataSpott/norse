@@ -14,11 +14,12 @@ import paramiko
 import socket
 import time
 import os
+import subprocess
 from .Window2_libraries import *
 from .validator_libraries import *
 from pathlib import Path
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 class MyWindow(QMainWindow):    #create a window through the initUI() method, and call it in the initialization method init()
     
@@ -650,7 +651,10 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
                 else:
                     EXCLUDE_FAST5 = '--exclude "*.fast5" --exclude "*.pod5"'
                 
-                RSYNC_EXIT_CODE = os.system(f'sshpass -p {PASSWORD} rsync {EXCLUDE_FAST5} -acrv --remove-source-files "{UPLOAD_DIR_PATH}" {USERNAME}@{IP_ADDRESSE}:"{SERVER_PATH}"/"{NEW_UPLOAD_DIR_NAME}"')
+                RSYNC_CMD_DESTINATION = f'{USERNAME}@{IP_ADDRESSE}:{SERVER_PATH}/{NEW_UPLOAD_DIR_NAME}'
+                RSYNC_CMD = ["sshpass", "-p", PASSWORD, "rsync", EXCLUDE_FAST5, "-acrv", "--remove-source-files", UPLOAD_DIR_PATH, RSYNC_CMD_DESTINATION]
+                RSYNC_RUN = subprocess.run(RSYNC_CMD, capture_output=True)
+                RSYNC_EXIT_CODE = RSYNC_RUN.returncode
                 
                 #check exit code and display pop-up message according to result
                 if RSYNC_EXIT_CODE != 0:
@@ -745,6 +749,29 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         PASSWORD = self.INPUT_PASSWORD.text()
         SERVER_PATH = self.INPUT_SERVER_PATH.text()
 
+        # Check if any input is empty and inform user if so
+        EXEC_MSG_EMPTY_INPUT = False
+        MSG_EMPTY_INPUT = QMessageBox()
+        MSG_EMPTY_INPUT.setWindowTitle("Empty input")
+        MSG_EMPTY_INPUT.setIcon(QMessageBox.Critical)
+
+        if PASSWORD == "":
+            MSG_EMPTY_INPUT.setText("Password is empty.")
+            EXEC_MSG_EMPTY_INPUT = True
+        if USERNAME == "": 
+            MSG_EMPTY_INPUT.setText("Username is empty.")
+            EXEC_MSG_EMPTY_INPUT = True
+        if IP_ADDRESSE == "":
+            MSG_EMPTY_INPUT.setText("IP-adresse is empty.")
+            EXEC_MSG_EMPTY_INPUT = True
+        if SERVER_PATH == "":
+            MSG_EMPTY_INPUT.setText("Server-path is empty.")
+            EXEC_MSG_EMPTY_INPUT = True
+        
+        if EXEC_MSG_EMPTY_INPUT == True:
+            x = MSG_EMPTY_INPUT.exec_()
+            return 20   #stop function execution here if any input is empty
+
         #write user-info (username, ip-addresse, path-on-server) to file -> file is loaded when Norse is opened, prefilling the according fields
         USER_INFO = open(self.NORSE_USER_INFO_PATH, "w+")   #open new file with write acess
         USER_INFO.truncate(0)   #delete file content by "resizing" it to 0 bytes
@@ -756,22 +783,25 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         TEST_UPLOAD_MSG.setWindowTitle("test connection")
 
         #execute rsync-dryrun to simulate upload and capture exit code
-        RSYNC_TEST_EXIT_CODE = os.system(f'sshpass -p {PASSWORD} rsync --dry-run -acrq "norse/data/run_info.txt" {USERNAME}@{IP_ADDRESSE}:"{SERVER_PATH}"/ >/dev/null 2>&1')
-  
+        RSYNC_TEST_CMD_STRING = f'{USERNAME}@{IP_ADDRESSE}:{SERVER_PATH}/'
+        RSYNC_TEST_CMD = ["sshpass", "-p", PASSWORD, "rsync", "--dry-run", "-acrq", "norse/setup.py", RSYNC_TEST_CMD_STRING]#, ">/dev/null 2>&1"]
+        RSYNC_TEST_RUN = subprocess.run(RSYNC_TEST_CMD, capture_output=True, text=True)
+        RSYNC_TEST_EXIT_CODE = RSYNC_TEST_RUN.returncode
+
         if RSYNC_TEST_EXIT_CODE == 0:
             TEST_UPLOAD_MSG.setText("Connected successfull")
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Information)
-        elif RSYNC_TEST_EXIT_CODE == 256:
-            TEST_UPLOAD_MSG.setText("Error: Password field is empty!")
-            TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
-        elif RSYNC_TEST_EXIT_CODE == 1280:
+        elif RSYNC_TEST_EXIT_CODE == 5:
             TEST_UPLOAD_MSG.setText("Error: Wrong username or password!")
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
-        elif RSYNC_TEST_EXIT_CODE == 3072:
-            TEST_UPLOAD_MSG.setText("Error: Empty or wrong server-path")    #error also occurs if server path without necessary access rights is given
+        elif RSYNC_TEST_EXIT_CODE == 12:
+            TEST_UPLOAD_MSG.setText(f"Error: Empty/wrong Server-path or no right to access path.")
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
-        elif RSYNC_TEST_EXIT_CODE == 65280:
-            TEST_UPLOAD_MSG.setText("Error: Empty or wrong IP-addresse!")
+        elif RSYNC_TEST_EXIT_CODE == 255:
+            TEST_UPLOAD_MSG.setText(f"Error: Wrong IP-adresse.")
+            TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
+        else:
+            TEST_UPLOAD_MSG.setText(f'Unexpected error with exit code: {RSYNC_TEST_EXIT_CODE}. Please report to developers.')
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
         x = TEST_UPLOAD_MSG.exec_()
 
