@@ -27,6 +27,7 @@ def main(sysargs = sys.argv[1:]):   #main function to run script and see version
 
     parser.add_argument("-v", "--version", action = 'version', version = f"norse = {VERSION}")
     parser.add_argument("-r", "--run", action = 'store_true', help = f"run {program}")
+    parser.add_argument("-d", "--debug", action = 'store_true', default = False, help = "run in debug mode to show additional error code")
 
     if len(sysargs) < 1:  #if no arguments typed print help and exit
         parser.print_help()
@@ -49,10 +50,10 @@ def main(sysargs = sys.argv[1:]):   #main function to run script and see version
         os.system(f"mv -f /download/sequencing_kit_data_latest.txt /norse/data/sequencing_kit_data.txt")
 
     if args.run:
-        window()    #exec function to show MainWindow-GUI when using "-r" or "--run"
+        window(debug = args.debug)    #exec function to show MainWindow-GUI when using "-r" or "--run"
 
 
-def window():   #def function to show GUI and exit correctly
+def window(debug = False):   #def function to show GUI and exit correctly
     app = QApplication(sys.argv)
     
     #define and apply dark mode palette
@@ -75,7 +76,7 @@ def window():   #def function to show GUI and exit correctly
 
     app.setPalette(dark_palette)
 
-    WIN = MyWindow()    #create instance of "MyWindow"-class, which is defined in MainWindow_libraries.py
+    WIN = MyWindow(debug_mode = debug)    #create instance of "MyWindow"-class, which is defined in MainWindow_libraries.py
     WIN.show()  #shows the instance
     sys.exit(app.exec_())
 

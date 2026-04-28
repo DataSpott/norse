@@ -23,9 +23,10 @@ VERSION = "1.3.0"
 
 class MyWindow(QMainWindow):    #create a window through the initUI() method, and call it in the initialization method init()
     
-    def __init__(self): #'self' is the first parameter of a class' methods that refers to the actual instance of the class
+    def __init__(self, debug_mode): #'self' is the first parameter of a class' methods that refers to the actual instance of the class; evry other argument is inherited the moment a instance is created
         super(MyWindow, self).__init__()
-        
+        self.DEBUG_MODE = debug_mode
+
         #define window geometry and title
         self.setGeometry(200, 200, 800, 600)
         self.setWindowTitle('norse')
@@ -788,20 +789,28 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         RSYNC_TEST_RUN = subprocess.run(RSYNC_TEST_CMD, capture_output=True, text=True)
         RSYNC_TEST_EXIT_CODE = RSYNC_TEST_RUN.returncode
 
+        if self.DEBUG_MODE == True:
+            ERROR_CODE = f'\nExit-code: {RSYNC_TEST_EXIT_CODE}'
+            ERROR_MSG = f'\nExit-msg: {RSYNC_TEST_RUN.stderr}'
+        else:
+            ERROR_CODE = ""
+            ERROR_MSG = ""
+        COMPLETE_ERROR_MSG = ERROR_MSG + ERROR_CODE
+
         if RSYNC_TEST_EXIT_CODE == 0:
             TEST_UPLOAD_MSG.setText("Connected successfull")
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Information)
         elif RSYNC_TEST_EXIT_CODE == 5:
-            TEST_UPLOAD_MSG.setText("Error: Wrong username or password!")
+            TEST_UPLOAD_MSG.setText(f'Error: Wrong username or password!{COMPLETE_ERROR_MSG}')
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
         elif RSYNC_TEST_EXIT_CODE == 12:
-            TEST_UPLOAD_MSG.setText(f"Error: Empty/wrong Server-path or no right to access path.")
+            TEST_UPLOAD_MSG.setText(f'Error: Empty/wrong Server-path or no right to access path.{COMPLETE_ERROR_MSG}')
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
         elif RSYNC_TEST_EXIT_CODE == 255:
-            TEST_UPLOAD_MSG.setText(f"Error: Wrong IP-adresse.")
+            TEST_UPLOAD_MSG.setText(f'Error: Wrong IP-adresse.{COMPLETE_ERROR_MSG}')
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
         else:
-            TEST_UPLOAD_MSG.setText(f'Unexpected error with exit code: {RSYNC_TEST_EXIT_CODE}. Please report to developers.')
+            TEST_UPLOAD_MSG.setText(f'Unexpected error with exit code: {RSYNC_TEST_EXIT_CODE}. Please report to developers.{COMPLETE_ERROR_MSG}')
             TEST_UPLOAD_MSG.setIcon(QMessageBox.Critical)
         x = TEST_UPLOAD_MSG.exec_()
 
