@@ -10,15 +10,27 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # Hint: ubuntu-latest is 22.04/24.04, macos-latest is now ARM64 (M1/M2)
         os: ["ubuntu-latest", "macos-latest"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
         with:
+          miniconda-version: "latest"
+          auto-update-conda: true
           environment-file: environment.yml
           activate-environment: norse
           channels: defaults
+          auto-activate-base: false
+      
+      - name: Fix NumPy Compatibility
+        run: conda install "numpy<2.0" --yes
+      
       - name: Install setup.py
-        run: python setup.py install
+        run: pip install .
+      
       - name: Check norse version
         run: norse --version
