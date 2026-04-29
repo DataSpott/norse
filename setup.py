@@ -5,7 +5,7 @@ import pkg_resources
 
 setup(
       name='norse',
-      version="1.2.0",
+      version="1.3.0",
       packages=find_packages(),
       include_package_data=True,
       scripts=['norse/main_script.py'],
