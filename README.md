@@ -75,11 +75,12 @@ use the newest docker from [dockerhub](https://hub.docker.com/repository/docker/
 docker pull dataspott/norse:VERSION
 
 docker run --rm \
+  -it
   -u qtuser \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -e DISPLAY=unix$DISPLAY \
   --network host \
-  -v $HOME:/home/qtuser \
+  -v $HOME:/home/qtuser:ro \
   -v $PWD:/upload \
   dataspott/norse:VERSION \
   norse -r
