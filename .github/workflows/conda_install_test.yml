@@ -20,14 +20,16 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniconda-version: "latest"
+          channels: conda-forge, defaults
           auto-update-conda: true
-          environment-file: environment.yml
           activate-environment: norse
-          channels: defaults
           auto-activate-base: false
+
+      - name: Install environment dependencies
+        run: conda install python=3.9 numpy"<2.0" pandas rsync --yes
       
-      - name: Fix NumPy Compatibility
-        run: conda install "numpy<2.0" --yes
+      - name: Install pip dependencies
+        run: pip install "PyQt5>=5.15.3" "requests>=2.25.1" "paramiko>=2.7.2" openpyxl xlrd qtwidgets
       
       - name: Install setup.py
         run: pip install .
