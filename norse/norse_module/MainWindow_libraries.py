@@ -363,10 +363,15 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         self.LABEL_MOCK_CSV.setFont(QtGui.QFont("arial", 15))
         self.LABEL_MOCK_CSV.adjustSize()
 
-        #set up checkbox to exclud fast5/pod5 files from upload
+        #set up checkbox to exclude fast5/pod5 files from upload
         self.EXCLUDE_FAST5_FILES = QtWidgets.QCheckBox('exclude fast5/pod5 files', self)
         self.EXCLUDE_FAST5_FILES.move(150, 565)
         self.EXCLUDE_FAST5_FILES.adjustSize()
+
+        #set up checkbox to perform a dry-run of the upload
+        self.DRY_RUN = QtWidgets.QCheckBox('Dry-run', self)
+        self.DRY_RUN.move(325, 565)
+        self.DRY_RUN.adjustSize()
 
         # check if there is a user_info.txt if not no abortion -> file is created in function "test_upload"
         try:    #test if command can be executed else exceptions according to errors
@@ -400,6 +405,7 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         BARCODE_BUTTON_STATUS = self.LABEL_BARCODE_BUTTON_STATUS.text()
         DATE = datetime.today().strftime('%Y-%m-%d-%H%M%S')
         EXCLUDE_FAST5_FILES_STATUS = self.EXCLUDE_FAST5_FILES.isChecked()
+        DRY_RUN_STATUS = self.DRY_RUN.isChecked()
         FLOWCELL_TYPE = self.INPUT_FLOWCELL_TYPE.currentText()
         IP_ADDRESSE = self.INPUT_IP_ADDRESSE.text()
         PASSWORD = self.INPUT_PASSWORD.text()
@@ -646,15 +652,28 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
 
             #rsync upload
             else:
-                #def variable to insert flag depending on fast5 exclusion yes/no
-                if EXCLUDE_FAST5_FILES_STATUS == False:
-                    EXCLUDE_FAST5 = ''
-                else:
-                    EXCLUDE_FAST5 = '--exclude "*.fast5" --exclude "*.pod5"'
-                
+                # Initiate base-cmd
+                RSYNC_CMD = ["sshpass", "-p", PASSWORD, "rsync"]
+
+                # Exclude fast5/pod5 files if checkbox is checked
+                if EXCLUDE_FAST5_FILES_STATUS:
+                    RSYNC_CMD.extend(["--exclude", "*.fast5", "--exclude", "*.pod5"])
+
+                # Add dry-run option if checkbox is checked
+                if DRY_RUN_STATUS:
+                    RSYNC_CMD.append("--dry-run")
+                    print("[INFO] Dry-Run activated: No files will be removed or deleted.")
+
+                # Extencd cmd by archive-mode, compression, verbose and remove-source-files option and upload dir path
+                RSYNC_CMD.extend(["-acrv", "--remove-source-files"])
+                RSYNC_CMD.append(UPLOAD_DIR_PATH)
+
+                # Set up destination for RSYNC command and extend cmd by it
                 RSYNC_CMD_DESTINATION = f'{USERNAME}@{IP_ADDRESSE}:{SERVER_PATH}/{NEW_UPLOAD_DIR_NAME}'
-                RSYNC_CMD = ["sshpass", "-p", PASSWORD, "rsync", EXCLUDE_FAST5, "-acrv", "--remove-source-files", UPLOAD_DIR_PATH, RSYNC_CMD_DESTINATION]
-                RSYNC_RUN = subprocess.run(RSYNC_CMD, capture_output=True)
+                RSYNC_CMD.append(RSYNC_CMD_DESTINATION)
+
+                # Run RSYNC command and save exit code
+                RSYNC_RUN = subprocess.run(RSYNC_CMD)
                 RSYNC_EXIT_CODE = RSYNC_RUN.returncode
                 
                 #check exit code and display pop-up message according to result
@@ -749,6 +768,7 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         IP_ADDRESSE = self.INPUT_IP_ADDRESSE.text()
         PASSWORD = self.INPUT_PASSWORD.text()
         SERVER_PATH = self.INPUT_SERVER_PATH.text()
+        CAPTURE_OUTPUT = not self.DEBUG_MODE  #capture output of rsync command only if debug mode is not active, else print output in terminal for debugging purposes
 
         # Check if any input is empty and inform user if so
         EXEC_MSG_EMPTY_INPUT = False
@@ -784,9 +804,9 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         TEST_UPLOAD_MSG.setWindowTitle("test connection")
 
         #execute rsync-dryrun to simulate upload and capture exit code
-        RSYNC_TEST_CMD_STRING = f'{USERNAME}@{IP_ADDRESSE}:{SERVER_PATH}/'
-        RSYNC_TEST_CMD = ["sshpass", "-p", PASSWORD, "rsync", "--dry-run", "-acrq", "norse/setup.py", RSYNC_TEST_CMD_STRING]#, ">/dev/null 2>&1"]
-        RSYNC_TEST_RUN = subprocess.run(RSYNC_TEST_CMD, capture_output=True, text=True)
+        RSYNC_TEST_CMD_DESTINATION = f'{USERNAME}@{IP_ADDRESSE}:{SERVER_PATH}/'
+        RSYNC_TEST_CMD = ["sshpass", "-p", PASSWORD, "rsync", "--dry-run", "-acrv", "norse/setup.py", RSYNC_TEST_CMD_DESTINATION]
+        RSYNC_TEST_RUN = subprocess.run(RSYNC_TEST_CMD, capture_output = CAPTURE_OUTPUT, text = True)
         RSYNC_TEST_EXIT_CODE = RSYNC_TEST_RUN.returncode
 
         if self.DEBUG_MODE == True:
