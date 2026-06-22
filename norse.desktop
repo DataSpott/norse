@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Norse
+Comment=Transfers local data to the IIMK-Server, utilizing rsync.
+Exec=gnome-terminal -- /bin/bash -c 'xhost +local:docker > /dev/null 2>&1; VERSION="v1.3.0-20260429"; IMAGE="dataspott/norse:${VERSION}"; if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then docker pull "${IMAGE}"; fi; docker run --rm -it -u qtuser -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY --network host -v $HOME:/home/qtuser -v /data:/upload "${IMAGE}" norse -r'
+Terminal=true
+Icon=transmission
+Type=Application
+Categories=GNOME;GTK;Utility
