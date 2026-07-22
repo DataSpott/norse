@@ -490,8 +490,8 @@ class MyWindow(QMainWindow):    #create a window through the initUI() method, an
         #no barcodes -> single sample
         if BARCODE_BUTTON_STATUS == 'no':
             LINEEDIT01 = self.LINEEDIT1.text()
-            RUN_INFO_FILE.write(f'Sample\t{LINEEDIT01}')
-            SAMPLE_CSV_FILE.write(f'sample,{LINEEDIT01}')
+            RUN_INFO_FILE.write(f'NA\t{LINEEDIT01}')
+            SAMPLE_CSV_FILE.write(f'NA,{LINEEDIT01}')
 
         #barcodes 1-12 (active if "yes" or "24" selected)
         elif BARCODE_BUTTON_STATUS in ['yes', '24']:
